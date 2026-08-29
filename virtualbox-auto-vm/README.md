@@ -99,7 +99,7 @@ Custom VM:
   -Cpus 4 `
   -DiskMB 81920 `
   -SshPort 2223 `
-  -VmUser "daywen"
+  -VmUser "sysadmin"
 ```
 
 ## SSH into the VM
