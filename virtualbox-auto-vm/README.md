@@ -69,7 +69,7 @@ VM_MEMORY=8192 \
 VM_CPUS=4 \
 VM_DISK_MB=81920 \
 VM_SSH_PORT=2223 \
-VM_USER=daywen \
+VM_USER=sysadmin \
 ./create-vm.sh ~/Downloads/ubuntu-server.iso sre-lab01
 ```
 
