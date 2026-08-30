@@ -1,156 +1,85 @@
-# VirtualBox Automatic Ubuntu VM Builder
+# VirtualBox Auto VM
 
-This project creates and installs an Ubuntu Server VM automatically with Oracle VirtualBox `VBoxManage`.
+Creates an Ubuntu VirtualBox VM from the command line, including CPU/RAM/disk setup, NAT networking, SSH port forwarding, and an unattended Ubuntu installation.
 
-## What it configures
+## New: choose where the VM is stored
 
-- Ubuntu 64-bit VM
-- 2 vCPUs by default
-- 4 GB RAM by default
-- 40 GB dynamically allocated VDI disk
-- NAT networking
-- SSH port forwarding from host `127.0.0.1:2222` to guest port `22`
-- VirtualBox unattended OS installation
-- Guest Additions
-- Post-install packages:
-  - openssh-server
-  - curl
-  - git
-  - vim
-  - htop
-  - jq
+### Windows PowerShell
 
-The VM runs headless after creation.
-
-## Requirements
-
-1. Oracle VirtualBox installed.
-2. `VBoxManage` available.
-3. An Ubuntu Server ISO already downloaded.
-
-Verify VirtualBox:
-
-### Windows
-
-```powershell
-& "C:\Program Files\Oracle\VirtualBox\VBoxManage.exe" --version
-```
-
-### Linux / macOS
-
-```bash
-VBoxManage --version
-```
-
-## Linux/macOS
-
-Make the script executable:
-
-```bash
-chmod +x create-vm.sh destroy-vm.sh
-```
-
-Create a VM:
-
-```bash
-./create-vm.sh ~/Downloads/ubuntu-server.iso
-```
-
-Custom VM name:
-
-```bash
-./create-vm.sh ~/Downloads/ubuntu-server.iso sre-lab01
-```
-
-Custom sizing:
-
-```bash
-VM_MEMORY=8192 \
-VM_CPUS=4 \
-VM_DISK_MB=81920 \
-VM_SSH_PORT=2223 \
-VM_USER=daywen \
-./create-vm.sh ~/Downloads/ubuntu-server.iso sre-lab01
-```
-
-The script securely prompts for the guest password.
-
-## Windows PowerShell
-
-Allow the script for the current PowerShell process if needed:
-
-```powershell
-Set-ExecutionPolicy -Scope Process Bypass
-```
-
-Run:
-
-```powershell
-.\create-vm.ps1 -IsoPath "C:\ISO\ubuntu-server.iso"
-```
-
-Custom VM:
+Use `-VmBaseFolder` to choose the parent folder:
 
 ```powershell
 .\create-vm.ps1 `
-  -IsoPath "C:\ISO\ubuntu-server.iso" `
-  -VmName "sre-lab01" `
+  -IsoPath "C:\ISO\ubuntu-24.04-server-amd64.iso" `
+  -VmBaseFolder "D:\VirtualBox VMs"
+```
+
+This creates the VM under approximately:
+
+```text
+D:\VirtualBox VMs\ubuntu-lab\
+```
+
+If you omit `-VmBaseFolder`, VirtualBox uses its configured **Default Machine Folder**.
+
+```powershell
+.\create-vm.ps1 -IsoPath "C:\ISO\ubuntu-24.04-server-amd64.iso"
+```
+
+### More Windows examples
+
+Custom name and storage location:
+
+```powershell
+.\create-vm.ps1 `
+  -IsoPath "C:\ISO\ubuntu-24.04-server-amd64.iso" `
+  -VmName "sre-lab-01" `
+  -VmBaseFolder "E:\VMs"
+```
+
+Custom CPU/RAM/disk:
+
+```powershell
+.\create-vm.ps1 `
+  -IsoPath "C:\ISO\ubuntu-24.04-server-amd64.iso" `
+  -VmName "sre-lab-01" `
+  -VmBaseFolder "D:\VirtualBox VMs" `
   -MemoryMB 8192 `
   -Cpus 4 `
-  -DiskMB 81920 `
-  -SshPort 2223 `
-  -VmUser "daywen"
+  -DiskMB 61440
 ```
 
-## SSH into the VM
+## Windows parameters
 
-Default:
+| Parameter | Default | Purpose |
+|---|---:|---|
+| `-IsoPath` | required | Ubuntu ISO |
+| `-VmName` | `ubuntu-lab` | VM name |
+| `-MemoryMB` | `4096` | RAM |
+| `-Cpus` | `2` | vCPU count |
+| `-DiskMB` | `40960` | VDI size |
+| `-SshPort` | `2222` | Host port forwarded to guest SSH 22 |
+| `-VmUser` | `labuser` | Ubuntu username |
+| `-VmPassword` | `labpass` | Ubuntu password |
+| `-VmBaseFolder` | empty | Parent folder for VM; empty uses VirtualBox default |
+
+## Linux/macOS
 
 ```bash
-ssh -p 2222 labuser@127.0.0.1
+./create-vm.sh \
+  --iso ~/Downloads/ubuntu-24.04-server-amd64.iso \
+  --base-folder /data/VirtualBoxVMs
 ```
 
-For a custom SSH port/user, use the values you specified.
+Omit `--base-folder` to use the VirtualBox default.
 
-## Check VM status
+## Delete the VM
 
-```bash
-VBoxManage showvminfo ubuntu-lab
+Windows:
+
+```powershell
+.\destroy-vm.ps1 -VmName "ubuntu-lab"
 ```
-
-List VMs:
-
-```bash
-VBoxManage list vms
-```
-
-List running VMs:
-
-```bash
-VBoxManage list runningvms
-```
-
-## Stop the VM
-
-Graceful ACPI shutdown:
-
-```bash
-VBoxManage controlvm ubuntu-lab acpipowerbutton
-```
-
-Force power off:
-
-```bash
-VBoxManage controlvm ubuntu-lab poweroff
-```
-
-## Start it again
-
-```bash
-VBoxManage startvm ubuntu-lab --type headless
-```
-
-## Delete the lab
 
 Linux/macOS:
 
@@ -158,20 +87,4 @@ Linux/macOS:
 ./destroy-vm.sh ubuntu-lab
 ```
 
-Windows:
-
-```powershell
-.\destroy-vm.ps1 -VmName ubuntu-lab
-```
-
-## Notes
-
-- `VBoxManage unattended install` support depends on the exact guest ISO. If an ISO is not recognized, test it with:
-
-```bash
-VBoxManage unattended detect --iso=/path/to/ubuntu-server.iso
-```
-
-- NAT keeps the VM isolated from the LAN by default.
-- SSH is exposed only on the host loopback interface (`127.0.0.1`) by default.
-- To create many VMs, use different VM names and SSH host ports.
+> The destroy scripts delete the VM and its attached virtual disks. Use carefully.
