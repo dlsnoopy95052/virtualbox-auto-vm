@@ -107,7 +107,7 @@ Run-VBoxManage unattended install $VmName `
     --user-password=$VmPassword `
     --full-user-name=$VmUser `
     --hostname="$VmName.local" `
-    --install-additions `
+    --no-install-additions `
     --post-install-command=$postInstall `
     --start-vm=headless
 
